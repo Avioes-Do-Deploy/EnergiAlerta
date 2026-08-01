@@ -1,0 +1,21 @@
+{
+  "$schema": "../node_modules/prisma-zod-generator/lib/config/schema.json",
+  "mode": "full",
+  "output": "../src/generated/zod",
+  "singleFileName": "index.ts",
+  "useMultipleFiles": true,
+  "placeSingleFileAtRoot": false,
+  "variants": {
+    "pure": {
+      "enabled": true,
+      "suffix": ".base"
+    },
+    "input": {
+      "enabled": true,
+      "suffix": ".input"
+    },
+    "result": {
+      "enabled": false
+    }
+  }
+}

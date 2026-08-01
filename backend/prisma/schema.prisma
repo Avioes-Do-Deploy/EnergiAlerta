@@ -1,0 +1,31 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+generator zod {
+  provider = "prisma-zod-generator"
+  config   = "./zod-generator.config.json"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model users {
+  id          Int           @unique @id @default(autoincrement())
+  
+  /// @zod.min(3)
+  name        String        
+  
+  /// @zod.email()
+  email       String        @unique
+  
+  /// @zod.min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%&*^?.;])/).trim()
+  password    String
+}
