@@ -33,7 +33,7 @@ function mediana(vals: number[]) {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
 }
 
-function explicar(tipo: TipoAnomalia, desvio: number, dias: number, inicio: string, fim: string, base: number) {
+export function explicarAnomalia(tipo: TipoAnomalia, desvio: number, dias: number, inicio: string, fim: string, base: number) {
   const pct = (desvio * 100).toFixed(0)
   if (tipo === 'BASELINE_SPIKE') {
     return `Consumo ${pct}% acima do baseline em ${inicio} (baseline de ${base.toFixed(1)} kWh).`
@@ -84,7 +84,7 @@ export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento
       kwhExcedente: Math.round(excedente * 100) / 100,
       janelaInicio: comBaseline[inicio].periodo,
       janelaFim: comBaseline[fim].periodo,
-      explicacao: explicar(tipo, desvio, fim - inicio + 1, comBaseline[inicio].periodo, comBaseline[fim].periodo, comBaseline[inicio].baseline),
+      explicacao: explicarAnomalia(tipo, desvio, fim - inicio + 1, comBaseline[inicio].periodo, comBaseline[fim].periodo, comBaseline[inicio].baseline),
     })
   }
 
