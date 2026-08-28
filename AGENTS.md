@@ -58,13 +58,14 @@ superpowers-systematic-debugging, superpowers-verification-before-completion —
 
 # Sobre o Projeto
 
-O OBJETIVO DESSE PROJETO NÃO É APRENDER! Esse é um repositório `template` que estou construindo para um hackathon, portanto, deve-se apenas implementar o boilerplate necessário.
+Esse é um projeto para um hackathon de 6 horas, portanto, deve priorizar simplicidade e viabilidade de desenvolvimento.
 
 Características do Hackathon em questão:
 
 - Duração de 8 horas diretas
-- Esfera temática de teor social/econômico/ambiental com recorte principalmente baiano
+- Esfera temática de teor social/econômico/ambiental
 - Foco da banca avaliadora nos critérios relacionados à adequação ao tema e criatividade da solução, viabilidade do produto e experiência do usuário
+- **Tema:** Sustentabilidade Tecnológica - Criar uma plataforma ou ferramenta computacional que aja em favor do meio ambiente. O objetivo é entregar uma solução que ajude a combater o desperdício de energia ou recursos em qualquer escala, incentivando a adoção de matrizes limpas e ajudando a sociedade a atingir as metas globais de descarbonização.
 
 ## Instruções de Prioridade Absoluta
 
