@@ -17,15 +17,121 @@ datasource db {
   provider = "sqlite"
 }
 
+enum Segment {
+  COMERCIO
+  ENSINO
+  INSTITUICAO
+}
+
+enum Bandeira {
+  VERDE
+  AMARELA
+  VERMELHA_1
+  VERMELHA_2
+}
+
+enum AnomalyType {
+  BASELINE_SPIKE
+  SUSTAINED_HIGH
+  TARIFF_WASTE
+}
+
+enum AnomalySeverity {
+  BAIXA
+  MEDIA
+  ALTA
+}
+
+enum AnomalyStatus {
+  DETECTADA
+  RESOLVIDA
+  FALSO_POSITIVO
+}
+
 model users {
-  id          Int           @unique @id @default(autoincrement())
-  
+  id          Int     @unique @id @default(autoincrement())
+
   /// @zod.min(3)
-  name        String        
-  
+  name        String
+
   /// @zod.email()
-  email       String        @unique
-  
+  email       String  @unique
+
   /// @zod.min(8).regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%&*^?.;])/).trim()
   password    String
+
+  units       units[]
+}
+
+model units {
+  id                    Int      @id @default(autoincrement())
+  nome                  String
+  segmento              Segment
+  area_m2               Float?
+  horario_funcionamento String?
+  faixa_consumo         String?
+  user                  users    @relation(fields: [user_id], references: [id])
+  user_id               Int
+  readings              consumption_readings[]
+  anomalies             anomalies[]
+  created_at            DateTime @default(now())
+
+  @@index([user_id])
+}
+
+model consumption_readings {
+  id          Int      @id @default(autoincrement())
+  unit        units    @relation(fields: [unit_id], references: [id])
+  unit_id     Int
+  periodo     DateTime
+  leitura_kwh Float
+  bandeira    Bandeira
+  created_at  DateTime @default(now())
+
+  @@unique([unit_id, periodo])
+  @@index([unit_id, periodo])
+}
+
+model tariff_tables {
+  // TE = Tarifa de Energia; TUSD = Tarifa de Uso do Sistema de Distribuição. Preços em R$/kWh; bandeiras em R$/MWh.
+  id                     Int      @id @default(autoincrement())
+  vigencia               DateTime
+  te_preco_kwh           Float
+  tusd_preco_kwh         Float
+  te_preco_ponta_kwh     Float?
+  tusd_preco_ponta_kwh   Float?
+  te_preco_fora_ponta_kwh   Float?
+  tusd_preco_fora_ponta_kwh Float?
+  bandeira_verde_preco_mwh      Float
+  bandeira_amarela_preco_mwh    Float
+  bandeira_vermelha1_preco_mwh  Float
+  bandeira_vermelha2_preco_mwh  Float
+  fonte                  String?
+  created_at             DateTime @default(now())
+}
+
+model emission_factors {
+  id                Int       @id @default(autoincrement())
+  fator_tco2_mwh    Float
+  fonte             String
+  data_vigencia     DateTime
+  data_fim_vigencia DateTime?
+  created_at        DateTime  @default(now())
+}
+
+model anomalies {
+  id              Int             @id @default(autoincrement())
+  unit            units           @relation(fields: [unit_id], references: [id])
+  unit_id         Int
+  tipo            AnomalyType
+  severidade      AnomalySeverity
+  desvio          Float
+  janela_inicio   DateTime
+  janela_fim      DateTime
+  status          AnomalyStatus   @default(DETECTADA)
+  explicacao      String?
+  rotulo_injetado Boolean         @default(false)
+  created_at      DateTime        @default(now())
+
+  @@index([unit_id, status])
 }

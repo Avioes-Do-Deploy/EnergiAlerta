@@ -10,11 +10,16 @@
     "watch:ts": "tsc -w",
     "dev": "fastify start -l info src/app.ts",
     "dev:start": "fastify start --ignore-watch=.ts$ -w -l info -P dist/app.js",
-    "prisma:pull": "pnpm prisma db pull",
-    "prisma:mig": "pnpm prisma migrate dev",
-    "prisma:gen": "pnpm prisma generate && node -e \"const fs = require('fs'); const file = 'src/generated/zod/schemas/aggregateusers.schema.ts'; if (fs.existsSync(file)) { fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/usersAggregateArgs/g, 'UsersAggregateArgs')); }\"",
-    "prisma:setup": "pnpm prisma:gen && pnpm prisma:mig",
-    "prisma:std": "pnpm prisma studio"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "tsx src/seed/seed.ts",
+    "prisma:pull": "npx prisma db pull",
+    "prisma:mig": "npx prisma migrate dev",
+    "prisma:gen": "npx prisma generate && node scripts/postgenerate.mjs",
+    "prisma:setup": "npm run prisma:gen && npm run prisma:mig",
+    "prisma:std": "npx prisma studio",
+    "db:migrate": "npx prisma migrate dev",
+    "db:generate": "npx prisma generate && node scripts/postgenerate.mjs"
   },
   "keywords": [],
   "author": "",
@@ -25,12 +30,14 @@
     "@fastify/env": "^7.0.0",
     "@fastify/helmet": "^13.1.0",
     "@fastify/jwt": "^10.2.0",
+    "@fastify/multipart": "^10.1.1",
     "@fastify/sensible": "^6.0.4",
     "@prisma/adapter-better-sqlite3": "^7.9.0",
     "@prisma/client": "^7.9.0",
     "@prisma/client-runtime-utils": "^7.9.0",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.11.1",
+    "csv-parse": "^7.0.2",
     "fastify": "^5.10.0",
     "fastify-cli": "^8.0.0",
     "fastify-plugin": "^5.1.0",
@@ -47,6 +54,8 @@
     "fastify-tsconfig": "^3.0.0",
     "prisma": "^7.9.0",
     "ts-node": "^10.9.2",
-    "typescript": "~5.9.3"
+    "tsx": "^4.23.12",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.11"
   }
 }

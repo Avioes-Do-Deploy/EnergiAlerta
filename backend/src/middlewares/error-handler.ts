@@ -1,10 +1,14 @@
-import { type FastifyReply } from "fastify";
+import { type FastifyReply, type FastifyRequest } from "fastify";
 import AppError from "../errors/app.error.js";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { ZodError } from "zod";
 import { ERROR_TAGS } from "../errors/app.error.js";
 
-export default async function errorHandler(error: unknown, rep: FastifyReply) {
+export default async function errorHandler(
+  error: unknown,
+  req: FastifyRequest,
+  rep: FastifyReply,
+) {
   if (error instanceof PrismaClientKnownRequestError) {
     console.error(`Erro ${error.code}: ${error.name}\n${error.message}\n Possível causa: ${error.cause}`)
     return rep.status(500).send({
