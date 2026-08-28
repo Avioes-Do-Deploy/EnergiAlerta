@@ -11,6 +11,8 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "concurrently": "^10.0.3"
+    "@fission-ai/openspec": "^1.11.0",
+    "concurrently": "^10.0.3",
+    "reasonix": "^1.32.1"
   }
 }
