@@ -3,6 +3,7 @@ import AutoLoad, { type AutoloadPluginOptions } from '@fastify/autoload'
 import { type FastifyPluginAsync } from 'fastify'
 import { fileURLToPath } from 'node:url'
 import env from '@fastify/env'
+import errorHandler from './middlewares/error-handler.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -26,10 +27,13 @@ const app: FastifyPluginAsync<AppOptions> = async (
     properties: {
       ADMIN_SECRET_KEY: { type: "string" },
       DATABASE_URL: { type: "string" },
-      JWT_SECRET: { type: "string" }
+      JWT_SECRET: { type: "string" },
+      EMISSION_FACTOR_TCO2_MWH: { type: "string" }
     }
   }
   await fastify.register(env, { schema: envSchema, dotenv: true })
+
+  fastify.setErrorHandler(errorHandler)
   // Do not touch the following lines
 
   // This loads all plugins defined in plugins
