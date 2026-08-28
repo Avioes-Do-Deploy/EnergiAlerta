@@ -4,6 +4,8 @@ import { REFERENCE } from '../config/reference.js'
 export interface EmissaoInput {
   kwh: number
   fatorTco2Mwh?: number
+  fonte?: string
+  vigencia?: string
 }
 
 export interface EmissaoResult {
@@ -16,7 +18,7 @@ export interface EmissaoResult {
   formula: string
 }
 
-export function calcularEmissao({ kwh, fatorTco2Mwh }: EmissaoInput): EmissaoResult {
+export function calcularEmissao({ kwh, fatorTco2Mwh, fonte, vigencia }: EmissaoInput): EmissaoResult {
   const fator = fatorTco2Mwh ?? REFERENCE.sinFactor.tco2PerMwh
   const tco2e = (kwh * fator) / 1000
   const kgCo2 = tco2e * 1000
@@ -30,8 +32,8 @@ export function calcularEmissao({ kwh, fatorTco2Mwh }: EmissaoInput): EmissaoRes
     arvores,
     kmCarro,
     fatorTco2Mwh: fator,
-    fonte: REFERENCE.sinFactor.fonte,
-    vigencia: REFERENCE.sinFactor.vigencia,
+    fonte: fonte ?? REFERENCE.sinFactor.fonte,
+    vigencia: vigencia ?? REFERENCE.sinFactor.vigencia,
     formula,
   }
 }

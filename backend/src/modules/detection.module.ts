@@ -8,6 +8,11 @@ export interface LeituraEntrada {
   leituraKwh: number
 }
 
+export interface LeituraComBaseline extends LeituraEntrada {
+  baseline: number
+  desvio: number
+}
+
 export interface AnomaliaDetectada {
   tipo: TipoAnomalia
   severidade: Severidade
@@ -39,26 +44,27 @@ function explicar(tipo: TipoAnomalia, desvio: number, dias: number, inicio: stri
   return `Consumo ${pct}% acima do baseline por ${dias} dias (${inicio} a ${fim}) — desperdício estrutural.`
 }
 
-export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento): AnomaliaDetectada[] {
-  const limiares = DETECTION.bySegment[segmento]
+// Baseline por dia da semana com janela móvel (4 semanas anteriores, excluindo
+// os últimos 14 dias para não contaminar com anomalia em curso).
+export function calcularBaselines(leituras: LeituraEntrada[]): LeituraComBaseline[] {
   const ordenadas = [...leituras].sort((a, b) => a.periodo.localeCompare(b.periodo))
-  const n = ordenadas.length
-  const base = new Array<number>(n).fill(0)
-  const dev = new Array<number>(n).fill(0)
-
-  for (let i = 0; i < n; i++) {
-    const dow = diaDaSemana(ordenadas[i].periodo)
+  return ordenadas.map((leitura, i) => {
+    const dow = diaDaSemana(leitura.periodo)
     const janela: number[] = []
-    // Janela móvel de 4 semanas (mesmo dia da semana), excluindo os últimos 14
-    // dias para não contaminar o baseline com a própria anomalia em curso.
     for (let j = i - 14; j >= 0 && janela.length < 4; j--) {
       if (diaDaSemana(ordenadas[j].periodo) === dow) janela.push(ordenadas[j].leituraKwh)
     }
-    if (janela.length < 2) continue
-    base[i] = mediana(janela)
-    if (base[i] > 0) dev[i] = (ordenadas[i].leituraKwh - base[i]) / base[i]
-  }
+    if (janela.length < 2) return { ...leitura, baseline: 0, desvio: 0 }
+    const baseline = mediana(janela)
+    const desvio = baseline > 0 ? (leitura.leituraKwh - baseline) / baseline : 0
+    return { ...leitura, baseline, desvio }
+  })
+}
 
+export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento): AnomaliaDetectada[] {
+  const limiares = DETECTION.bySegment[segmento]
+  const comBaseline = calcularBaselines(leituras)
+  const n = comBaseline.length
   const usados = new Array<boolean>(n).fill(false)
   const anomalias: AnomaliaDetectada[] = []
 
@@ -66,8 +72,8 @@ export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento
     let somaDev = 0
     let excedente = 0
     for (let k = inicio; k <= fim; k++) {
-      somaDev += dev[k]
-      excedente += ordenadas[k].leituraKwh - base[k]
+      somaDev += comBaseline[k].desvio
+      excedente += comBaseline[k].leituraKwh - comBaseline[k].baseline
       usados[k] = true
     }
     const desvio = somaDev / (fim - inicio + 1)
@@ -76,9 +82,9 @@ export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento
       severidade: severidadePara(desvio),
       desvio,
       kwhExcedente: Math.round(excedente * 100) / 100,
-      janelaInicio: ordenadas[inicio].periodo,
-      janelaFim: ordenadas[fim].periodo,
-      explicacao: explicar(tipo, desvio, fim - inicio + 1, ordenadas[inicio].periodo, ordenadas[fim].periodo, base[inicio]),
+      janelaInicio: comBaseline[inicio].periodo,
+      janelaFim: comBaseline[fim].periodo,
+      explicacao: explicar(tipo, desvio, fim - inicio + 1, comBaseline[inicio].periodo, comBaseline[fim].periodo, comBaseline[inicio].baseline),
     })
   }
 
@@ -86,7 +92,7 @@ export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento
   // estiverem acima do limiar (sem 2 dias consecutivos abaixo), evitando que
   // ruído quebre o reconhecimento de uma anomalia prolongada.
   const runs = (minDev: number, minDays: number, tipo: TipoAnomalia) => {
-    const flag = dev.map((d) => (d >= minDev ? 1 : 0))
+    const flag = comBaseline.map((c) => (c.desvio >= minDev ? 1 : 0))
     for (let i = 0; i < n; ) {
       if (usados[i] || flag[i] === 0) {
         i++
@@ -113,7 +119,7 @@ export function detectarAnomalias(leituras: LeituraEntrada[], segmento: Segmento
   runs(limiares.tariffWaste.minDev, limiares.tariffWaste.minDays, 'TARIFF_WASTE')
   runs(limiares.sustainedHigh.minDev, limiares.sustainedHigh.minDays, 'SUSTAINED_HIGH')
   for (let i = 0; i < n; i++) {
-    if (!usados[i] && dev[i] >= limiares.spike.minDev) adicionar(i, i, 'BASELINE_SPIKE')
+    if (!usados[i] && comBaseline[i].desvio >= limiares.spike.minDev) adicionar(i, i, 'BASELINE_SPIKE')
   }
 
   return anomalias
